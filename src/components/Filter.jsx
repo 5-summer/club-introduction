@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { AiOutlineClose } from 'react-icons/ai'
 import { GrPowerReset } from 'react-icons/gr'
 import styled from 'styled-components'
@@ -8,8 +7,6 @@ const FILTER_GROUPS = [
   { title: '세부 카테고리', options: ['수학', '과학', '보건', '생명', 'IT'] },
   { title: '학년', options: ['1학년', '2학년'] },
 ]
-
-const INITIAL_SELECTIONS = ['이과', 'IT', '1학년']
 
 const Backdrop = styled.div`
   position: fixed;
@@ -117,23 +114,17 @@ const Option = styled.button`
   cursor: pointer;
 `
 
-function Filter({ onClose }) {
-  const [selectedOptions, setSelectedOptions] = useState(
-    () => new Set(INITIAL_SELECTIONS),
-  )
-
+function Filter({ onClose, selectedOptions, onChange }) {
   const toggleOption = (option) => {
-    setSelectedOptions((currentOptions) => {
-      const nextOptions = new Set(currentOptions)
+    const nextOptions = new Set(selectedOptions)
 
-      if (nextOptions.has(option)) {
-        nextOptions.delete(option)
-      } else {
-        nextOptions.add(option)
-      }
+    if (nextOptions.has(option)) {
+      nextOptions.delete(option)
+    } else {
+      nextOptions.add(option)
+    }
 
-      return nextOptions
-    })
+    onChange(nextOptions)
   }
 
   return (
@@ -152,7 +143,7 @@ function Filter({ onClose }) {
         </ModalHeader>
 
         <ResetRow>
-          <ResetButton type="button" onClick={() => setSelectedOptions(new Set())}>
+          <ResetButton type="button" onClick={() => onChange(new Set())}>
             <GrPowerReset size={30} />
             초기화
           </ResetButton>

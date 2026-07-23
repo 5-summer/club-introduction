@@ -1,6 +1,13 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import Filter from "../components/Filter";
+
+const FILTER_GROUPS = [
+  { title: "카테고리", options: ["이과", "문과"] },
+  { title: "세부 카테고리", options: ["수학", "과학", "보건", "생명", "IT"] },
+  { title: "학년", options: ["1학년", "2학년"] },
+];
 
 const Container = styled.div`
   width: 100%;
@@ -52,12 +59,28 @@ const CardArea = styled.div`
   gap: 58px 40px;
 `;
 
-const ClubCard = styled.div`
+const ClubCard = styled(Link)`
   width: 251px;
   height: 322px;
 
   display: flex;
   flex-direction: column;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 30px;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 24px rgba(43, 87, 72, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 3px solid #618764;
+    outline-offset: 4px;
+  }
 `;
 
 const ImageBox = styled.div`
@@ -350,6 +373,7 @@ function List(){
 
   const [showFilter,setShowFilter] = useState(false);
   const [search,setSearch] = useState("");
+  const [selectedFilters,setSelectedFilters] = useState(() => new Set());
 
   const filteredClubs = clubs.filter((club)=>{
 
@@ -371,7 +395,36 @@ function List(){
   .toLowerCase();
 
 
-  return data.includes(keyword);
+  const matchesSearch = data.includes(keyword);
+
+  const matchesFilterGroup = (title, options) => {
+    const selectedInGroup = options.filter((option) =>
+      selectedFilters.has(option)
+    );
+
+    if (selectedInGroup.length === 0) {
+      return true;
+    }
+
+    if (title === "카테고리") {
+      return selectedInGroup.some((option) => club.category.includes(option));
+    }
+
+    if (title === "세부 카테고리") {
+      return selectedInGroup.some((option) => club.detail.includes(option));
+    }
+
+    return selectedInGroup.some((option) => {
+      const gradeNumber = option.replace("학년", "");
+      return club.grade.some((grade) => grade.includes(gradeNumber));
+    });
+  };
+
+  const matchesFilters = FILTER_GROUPS.every(({ title, options }) =>
+    matchesFilterGroup(title, options)
+  );
+
+  return matchesSearch && matchesFilters;
 
 });
 
@@ -388,14 +441,19 @@ function List(){
 
 
       <FilterButton onClick={()=>setShowFilter(true)}>
-        필터
+        필터{selectedFilters.size > 0 ? ` (${selectedFilters.size})` : ""}
       </FilterButton>
 
 
       <CardArea>
 
         {filteredClubs.map((club)=>(
-          <ClubCard key={club.name}>
+          <ClubCard
+            key={club.name}
+            to={`/introduce/${encodeURIComponent(club.name)}`}
+            state={{ club }}
+            aria-label={`${club.name} 소개 페이지로 이동`}
+          >
 
             <ImageBox>
               사진
@@ -436,7 +494,11 @@ function List(){
 
       {
         showFilter &&
-        <Filter onClose={()=>setShowFilter(false)}/>
+        <Filter
+          onClose={()=>setShowFilter(false)}
+          selectedOptions={selectedFilters}
+          onChange={setSelectedFilters}
+        />
       }
 
 
