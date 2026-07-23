@@ -18,6 +18,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/list" element={<List />} />
         <Route path="/introduce" element={<Introduce />} />
+        <Route path="/introduce/:clubName" element={<Introduce />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/apply" element={<Apply />} />
         <Route path="/register" element={<ClubRegister />} />

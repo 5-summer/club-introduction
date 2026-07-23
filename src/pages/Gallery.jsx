@@ -1,4 +1,7 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
+import Filter from "../components/Filter";
 
 // 1. 임의의 활동 내용과 테스트 사진 URL 데이터
 const DUMMY_DATA = [
@@ -35,6 +38,9 @@ const DUMMY_DATA = [
 ];
 
 function Gallery() {
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState(() => new Set());
+
   return (
     <Container>
       {/* 태그 이름을 Header에서 GalleryTitleArea로 바꿔서 헤더와 안 헷갈리게 수정했습니다 */}
@@ -47,8 +53,10 @@ function Gallery() {
         </TitleBox>
 
         <ButtonGroup>
-          <WriteButton>활동 내용 작성 +</WriteButton>
-          <FilterButton>필터 ☰</FilterButton>
+          <WriteButton to="/activity/write">활동 내용 작성 +</WriteButton>
+          <FilterButton type="button" onClick={() => setShowFilter(true)}>
+            필터{selectedFilters.size > 0 ? ` (${selectedFilters.size})` : ""} ☰
+          </FilterButton>
         </ButtonGroup>
       </GalleryTitleArea>
 
@@ -69,6 +77,14 @@ function Gallery() {
           </ImageContainer>
         </Card>
       ))}
+
+      {showFilter && (
+        <Filter
+          onClose={() => setShowFilter(false)}
+          selectedOptions={selectedFilters}
+          onChange={setSelectedFilters}
+        />
+      )}
     </Container>
   );
 }
@@ -111,7 +127,7 @@ const ButtonGroup = styled.div`
   gap: 10px;
 `;
 
-const WriteButton = styled.button`
+const WriteButton = styled(Link)`
   background-color: #2b5742;
   color: white;
   padding: 10px 18px;
@@ -119,6 +135,7 @@ const WriteButton = styled.button`
   border: none;
   font-weight: bold;
   cursor: pointer;
+  text-decoration: none;
 `;
 
 const FilterButton = styled.button`

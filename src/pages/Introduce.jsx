@@ -1,7 +1,40 @@
+import { AiOutlineArrowLeft } from "react-icons/ai";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import styled from "styled-components";
 
+const defaultClub = {
+  name: "코딩 클래스",
+  description:
+    "코딩 클래스는 프로그래밍의 기초부터 실제 웹 서비스 개발까지 함께 학습하며 성장하는 동아리입니다.",
+  category: ["이과"],
+  detail: ["IT"],
+  grade: ["1,2학년"],
+  interview: true,
+};
+
+const codingClassIntroduction =
+  "코딩 클래스는 프로그래밍의 기초부터 실제 웹 서비스 개발까지 함께 학습하며 성장하는 동아리입니다. 논리적 사고력을 기르고 자신만의 창의적인 결과물을 만들어내는 것을 목표로 합니다.";
+
+const codingClassStrengths =
+  "다양한 팀 프로젝트를 통해 실전 감각을 익힐 수 있고, 선후배 간의 멘토링이 활발하여 초보자도 쉽고 재미있게 코딩을 시작할 수 있습니다. 최신 IT 트렌드를 공유하며 함께 공부하는 열정적인 분위기입니다!";
+
 function Introduce() {
-  // 임의의 사진 URL (테스트용 이미지)
+  const { clubName } = useParams();
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const club = state?.club ?? {
+    ...defaultClub,
+    name: clubName ?? defaultClub.name,
+  };
+  const isCodingClass = club.name.replaceAll(" ", "") === "코딩클래스";
+
+  const tags = [
+    ...club.category,
+    ...club.detail,
+    ...club.grade,
+    club.interview ? "면접" : "비면접",
+  ];
+
   const activityImages = [
     "https://picsum.photos/id/180/300/200",
     "https://picsum.photos/id/20/300/200",
@@ -10,48 +43,51 @@ function Introduce() {
 
   return (
     <Container>
-      {/* 메인 타이틀과 담당 선생님 */}
+      <BackButton
+        type="button"
+        aria-label="목록 페이지로 돌아가기"
+        onClick={() => navigate(-1)}
+      >
+        <AiOutlineArrowLeft aria-hidden="true" />
+      </BackButton>
+
       <TitleSection>
-        <MainTitle>코딩 클래스</MainTitle>
-        <TeacherName>담당 선생님: 김정아 쌤</TeacherName>
+        <MainTitle>{club.name}</MainTitle>
+        <TeacherName>
+          담당 선생님: {isCodingClass ? "김정아 선생님" : "정보 준비 중"}
+        </TeacherName>
       </TitleSection>
 
-      {/* 동아리 소개 */}
       <Section>
         <SectionLabel>동아리 소개</SectionLabel>
         <ContentBox>
-          코딩 클래스는 프로그래밍의 기초부터 실제 웹 서비스 개발까지 함께 학습하며 
-          성장하는 동아리입니다. 논리적 사고력을 기르고 자신만의 창의적인 결과물을 
-          만들어내는 것을 목표로 합니다.
+          {isCodingClass ? codingClassIntroduction : club.description}
         </ContentBox>
       </Section>
 
-      {/* 우리 동아리의 장점 */}
       <Section>
         <SectionLabel>우리 동아리의 장점</SectionLabel>
         <ContentBox>
-          다양한 팀 프로젝트를 통해 실전 감각을 익힐 수 있고, 선후배 간의 멘토링이 
-          활발하여 초보자도 쉽고 재미있게 코딩을 시작할 수 있습니다. 
-          최신 IT 트렌드를 공유하며 함께 공부하는 열정적인 분위기입니다!
+          {isCodingClass
+            ? codingClassStrengths
+            : `${club.name}에서 관심 분야를 함께 탐구하고 다양한 활동을 경험할 수 있습니다. 동아리원들과 협력하며 새로운 지식과 경험을 쌓아보세요.`}
         </ContentBox>
       </Section>
 
-      {/* 동아리의 특징 (태그) */}
       <Section>
         <SectionLabel>동아리의 특징</SectionLabel>
         <TagGroup>
-          <Tag># 면접</Tag>
-          <Tag># 이과</Tag>
-          <Tag># IT</Tag>
+          {tags.map((tag) => (
+            <Tag key={tag}># {tag}</Tag>
+          ))}
         </TagGroup>
       </Section>
 
-      {/* 활동 사진 */}
       <Section>
         <SectionLabel>활동 사진</SectionLabel>
         <PhotoGroup>
           {activityImages.map((src, index) => (
-            <PhotoBox key={index} src={src} alt={`활동 사진 ${index + 1}`} />
+            <PhotoBox key={src} src={src} alt={`활동 사진 ${index + 1}`} />
           ))}
         </PhotoGroup>
       </Section>
@@ -59,83 +95,120 @@ function Introduce() {
   );
 }
 
-// ----------------- Style Definition -----------------
-
 const Container = styled.div`
+  position: relative;
   max-width: 800px;
   margin: 0 auto;
   padding: 40px 20px;
-  font-family: 'Pretendard', -apple-system, sans-serif;
+  font-family: "Pretendard", -apple-system, sans-serif;
+  text-align: left;
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  top: 40px;
+  left: 20px;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  color: #2b5748;
+  background: #e6f3d3;
+  border: 2px solid #2b5748;
+  border-radius: 50%;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    color: #fff;
+    background: #2b5748;
+    transform: translateX(-3px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(97, 135, 100, 0.4);
+    outline-offset: 3px;
+  }
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `;
 
 const TitleSection = styled.div`
-  text-align: center;
-  margin-bottom: 40px;
   position: relative;
+  margin-bottom: 40px;
+  text-align: center;
 `;
 
 const MainTitle = styled.h1`
+  margin-bottom: 8px;
+  color: #000;
   font-size: 40px;
   font-weight: 800;
-  color: #000;
-  margin-bottom: 8px;
 `;
 
 const TeacherName = styled.p`
-  font-size: 18px;
-  color: #333;
-  text-align: right;
   margin-right: 20px;
+  color: #333;
+  font-size: 18px;
+  text-align: right;
 `;
 
-const Section = styled.div`
+const Section = styled.section`
   margin-bottom: 30px;
 `;
 
-const SectionLabel = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
+const SectionLabel = styled.h2`
   margin-bottom: 12px;
   color: #000;
+  font-size: 20px;
+  font-weight: 700;
 `;
 
 const ContentBox = styled.div`
-  background-color: #f1f7e9; /* 연한 연두색 배경 */
-  border: 1.5px solid #2b5742; /* 진한 초록색 테두리 */
-  border-radius: 12px;
+  min-height: 80px;
   padding: 24px;
+  color: #333;
   font-size: 16px;
   line-height: 1.6;
-  color: #333;
-  min-height: 80px;
+  background-color: #f1f7e9;
+  border: 1.5px solid #2b5742;
+  border-radius: 12px;
 `;
 
 const TagGroup = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 `;
 
 const Tag = styled.span`
-  background-color: #2b5742; /* 태그 배경색 */
-  color: white;
   padding: 8px 16px;
-  border-radius: 20px;
+  color: #fff;
   font-size: 16px;
   font-weight: 600;
+  background-color: #2b5742;
+  border-radius: 20px;
 `;
 
 const PhotoGroup = styled.div`
   display: flex;
-  gap: 15px;
   justify-content: space-between;
+  gap: 15px;
 `;
 
 const PhotoBox = styled.img`
-  width: 31%; /* 사진 3개를 나란히 배치 */
+  width: 31%;
   aspect-ratio: 4 / 3;
+  object-fit: cover;
   background-color: #e0e0e0;
   border-radius: 12px;
-  object-fit: cover;
 `;
 
 export default Introduce;

@@ -1,12 +1,9 @@
 import styled from "styled-components";
 import { AiOutlineArrowRight } from "react-icons/ai";
+import { Link } from "react-router-dom";
 import pungsaeng from "../assets/pungsaeng.png";
 
 function Home() {
-  const handleClick = () => {
-    alert("동아리 소개 페이지");
-  };
-
   return (
     <Container>
       <WaterMark src={pungsaeng} alt="풍생고 로고" />
@@ -19,7 +16,7 @@ function Home() {
         학생들의 다양한 활동과 이야기를 소개합니다
       </SubTitle>
 
-      <MoreButton onClick={handleClick}>
+      <MoreButton to="/list">
         자세히 알아보기
         <AiOutlineArrowRight />
       </MoreButton>
@@ -98,7 +95,7 @@ const SubTitle = styled.h2`
   color: #273338;
 `;
 
-const MoreButton = styled.button`
+const MoreButton = styled(Link)`
   position: absolute;
 
   left: 50%;
@@ -123,6 +120,7 @@ const MoreButton = styled.button`
   font-weight: 500;
 
   color: #2b5748;
+  text-decoration: none;
 
   cursor: pointer;
 
