@@ -42,7 +42,7 @@ function Header() {
         <NavigationLink to="/list">목록</NavigationLink>
         <NavigationLink to="/apply">모집/지원</NavigationLink>
         <NavigationLink to="/gallery">갤러리</NavigationLink>
-        <NavigationLink to="/register">등록</NavigationLink>
+        <NavigationLink to="/admin">관리자</NavigationLink>
       </Navigation>
     </HeaderContainer>
   );

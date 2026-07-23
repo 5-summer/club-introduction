@@ -1,13 +1,48 @@
-import { useState } from 'react'
-import { AiOutlinePlus } from 'react-icons/ai'
+import { useEffect, useState } from 'react'
+import {
+  AiOutlineArrowLeft,
+  AiOutlineClose,
+  AiOutlinePlus,
+} from 'react-icons/ai'
+import { useNavigate, useParams } from 'react-router-dom'
 import styled from 'styled-components'
+import {
+  createActivity,
+  getActivity,
+  updateActivity,
+} from '../lib/supabaseApi.js'
 
 const Page = styled.main`
+  position: relative;
   width: min(1124px, calc(100% - 40px));
   margin: 0 auto;
   padding: 68px 0 90px;
   color: #000;
   text-align: left;
+`
+
+const BackButton = styled.button`
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 28px;
+  padding: 0;
+  color: #2b5748;
+  background: #e6f3d3;
+  border: 2px solid #2b5748;
+  border-radius: 50%;
+  place-items: center;
+  cursor: pointer;
+
+  &:hover {
+    color: #fff;
+    background: #2b5748;
+  }
+
+  svg {
+    width: 28px;
+    height: 28px;
+  }
 `
 
 const PageHeading = styled.div`
@@ -61,9 +96,9 @@ const Field = styled.label`
   font-size: 30px;
   line-height: 1.2;
 
+  input,
   textarea {
     width: 100%;
-    min-height: 410px;
     padding: 18px;
     color: #273338;
     background: rgba(230, 243, 211, 0.55);
@@ -79,6 +114,14 @@ const Field = styled.label`
       background: #f3f8eb;
       box-shadow: 0 0 0 3px rgba(97, 135, 100, 0.2);
     }
+  }
+
+  input {
+    height: 64px;
+  }
+
+  textarea {
+    min-height: 410px;
   }
 
   @media (max-width: 720px) {
@@ -136,6 +179,7 @@ const PhotoSlots = styled.div`
 `
 
 const PhotoSlot = styled.div`
+  position: relative;
   height: 171px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.1);
@@ -152,6 +196,22 @@ const PhotoSlot = styled.div`
   }
 `
 
+const RemovePhotoButton = styled.button`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #fff;
+  background: rgba(39, 51, 56, 0.78);
+  border: 0;
+  border-radius: 50%;
+  place-items: center;
+  cursor: pointer;
+`
+
 const SubmitButton = styled.button`
   width: 100%;
   height: 89px;
@@ -163,6 +223,11 @@ const SubmitButton = styled.button`
   border: 0;
   border-radius: 15px;
   cursor: pointer;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
 
   &:hover {
     background: #273338;
@@ -179,14 +244,51 @@ const SubmitButton = styled.button`
   }
 `
 
+const StatusMessage = styled.p`
+  margin: -18px 0;
+  color: #b42318;
+  font-size: 18px;
+`
+
 function ActivityWrite() {
+  const navigate = useNavigate()
+  const { activityId } = useParams()
+  const isEditing = Boolean(activityId)
+  const [clubName, setClubName] = useState('')
+  const [content, setContent] = useState('')
   const [photos, setPhotos] = useState([])
+  const [existingImageUrls, setExistingImageUrls] = useState([])
+  const [removedImageUrls, setRemovedImageUrls] = useState([])
+  const [message, setMessage] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [loading, setLoading] = useState(isEditing)
+
+  useEffect(() => {
+    if (!isEditing) {
+      return
+    }
+
+    getActivity(activityId)
+      .then((activity) => {
+        if (!activity) {
+          setMessage('수정할 활동 글을 찾을 수 없습니다.')
+          return
+        }
+
+        setClubName(activity.club_name || activity.clubs?.name || '')
+        setContent(activity.content)
+        setExistingImageUrls(activity.image_urls ?? [])
+      })
+      .catch((error) => setMessage(error.message))
+      .finally(() => setLoading(false))
+  }, [activityId, isEditing])
 
   const handlePhotos = (event) => {
     const selectedPhotos = Array.from(event.target.files)
     const newPhotos = selectedPhotos.map((file) => ({
       id: `${file.name}-${file.lastModified}-${crypto.randomUUID()}`,
       name: file.name,
+      file,
       url: URL.createObjectURL(file),
     }))
 
@@ -194,17 +296,110 @@ function ActivityWrite() {
     event.target.value = ''
   }
 
+  const removeNewPhoto = (photoId) => {
+    setPhotos((currentPhotos) =>
+      currentPhotos.filter((photo) => {
+        if (photo.id === photoId) {
+          URL.revokeObjectURL(photo.url)
+          return false
+        }
+
+        return true
+      }),
+    )
+  }
+
+  const removeExistingPhoto = (imageUrl) => {
+    setExistingImageUrls((currentUrls) =>
+      currentUrls.filter((url) => url !== imageUrl),
+    )
+    setRemovedImageUrls((currentUrls) => [...currentUrls, imageUrl])
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setMessage('')
+
+    if (!clubName.trim()) {
+      setMessage('동아리 이름을 입력해주세요.')
+      return
+    }
+
+    if (!content.trim()) {
+      setMessage('활동 내용을 입력해주세요.')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      if (isEditing) {
+        await updateActivity({
+          activityId,
+          clubName: clubName.trim(),
+          content: content.trim(),
+          existingImageUrls,
+          newPhotos: photos.map((photo) => photo.file),
+          removedImageUrls,
+        })
+      } else {
+        await createActivity({
+          clubName: clubName.trim(),
+          content: content.trim(),
+          photos: photos.map((photo) => photo.file),
+        })
+      }
+
+      navigate('/admin')
+    } catch (error) {
+      setMessage(error.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <Page>
+      <BackButton
+        type="button"
+        aria-label="관리자 페이지로 돌아가기"
+        onClick={() => navigate('/admin')}
+      >
+        <AiOutlineArrowLeft aria-hidden="true" />
+      </BackButton>
+
       <PageHeading>
-        <h1>활동 내용 작성</h1>
-        <p>활동한 내용을 작성하고 사진을 추가해주세요</p>
+        <h1>{isEditing ? '활동 내용 수정' : '활동 내용 작성'}</h1>
+        <p>
+          {isEditing
+            ? '작성한 활동 내용과 사진을 수정해주세요'
+            : '활동한 내용을 작성하고 사진을 추가해주세요'}
+        </p>
       </PageHeading>
 
-      <Form onSubmit={(event) => event.preventDefault()}>
+      {loading ? (
+        <StatusMessage>활동 내용을 불러오는 중입니다.</StatusMessage>
+      ) : (
+      <Form onSubmit={handleSubmit}>
+        <Field>
+          동아리 이름
+          <input
+            name="clubName"
+            aria-label="동아리 이름"
+            placeholder="동아리 이름을 입력하세요"
+            value={clubName}
+            onChange={(event) => setClubName(event.target.value)}
+          />
+        </Field>
+
         <Field>
           활동 내용 작성하기
-          <textarea name="activity" aria-label="활동 내용" />
+          <textarea
+            name="activity"
+            aria-label="활동 내용"
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+          />
         </Field>
 
         <PhotoField>
@@ -216,19 +411,48 @@ function ActivityWrite() {
               <input type="file" accept="image/*" multiple onChange={handlePhotos} />
             </FileButton>
           </PhotoHeading>
-          {photos.length > 0 && (
+          {(existingImageUrls.length > 0 || photos.length > 0) && (
             <PhotoSlots>
+              {existingImageUrls.map((imageUrl) => (
+                <PhotoSlot key={imageUrl}>
+                  <img src={imageUrl} alt="기존 활동 사진" />
+                  <RemovePhotoButton
+                    type="button"
+                    aria-label="기존 사진 삭제"
+                    onClick={() => removeExistingPhoto(imageUrl)}
+                  >
+                    <AiOutlineClose aria-hidden="true" />
+                  </RemovePhotoButton>
+                </PhotoSlot>
+              ))}
               {photos.map((photo) => (
                 <PhotoSlot key={photo.id}>
                   <img src={photo.url} alt={photo.name} />
+                  <RemovePhotoButton
+                    type="button"
+                    aria-label={`${photo.name} 삭제`}
+                    onClick={() => removeNewPhoto(photo.id)}
+                  >
+                    <AiOutlineClose aria-hidden="true" />
+                  </RemovePhotoButton>
                 </PhotoSlot>
               ))}
             </PhotoSlots>
           )}
         </PhotoField>
 
-        <SubmitButton type="submit">등록하기</SubmitButton>
+        {message && <StatusMessage role="alert">{message}</StatusMessage>}
+        <SubmitButton type="submit" disabled={submitting}>
+          {submitting
+            ? isEditing
+              ? '수정 중...'
+              : '등록 중...'
+            : isEditing
+              ? '수정하기'
+              : '등록하기'}
+        </SubmitButton>
       </Form>
+      )}
     </Page>
   )
 }

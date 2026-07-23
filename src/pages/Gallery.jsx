@@ -1,49 +1,55 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import styled from "styled-components";
-import Filter from "../components/Filter";
-
-// 1. 임의의 활동 내용과 테스트 사진 URL 데이터
-const DUMMY_DATA = [
-  {
-    id: 1,
-    title: "코딩 클래스 7/23 활동 사진 및 내용",
-    content:
-      "오늘은 React 기초와 styled-components 사용법을 학습했습니다. 다들 집중해서 자신만의 동아리 웹페이지 레이아웃을 작성해 보았습니다!",
-    images: [
-      "https://picsum.photos/id/1/200/200",
-      "https://picsum.photos/id/180/200/200",
-    ],
-  },
-  {
-    id: 2,
-    title: "코딩 클래스 7/24 활동 사진 및 내용",
-    content:
-      "map 함수를 이용한 동적 데이터 렌더링 및 더미 데이터를 활용해 UI에 직접 내용을 채워 넣는 실습을 진행했습니다.",
-    images: [
-      "https://picsum.photos/id/20/200/200",
-      "https://picsum.photos/id/60/200/200",
-    ],
-  },
-  {
-    id: 3,
-    title: "코딩 클래스 7/25 활동 사진 및 내용",
-    content:
-      "동아리원들과 함께 프로젝트 UI 디자인을 점검하고 피드백을 주고받았습니다. 디자인대로 화면이 아주 잘 구성되고 있네요!",
-    images: [
-      "https://picsum.photos/id/119/200/200",
-      "https://picsum.photos/id/160/200/200",
-    ],
-  },
-];
+import { useEffect, useMemo, useState } from 'react'
+import styled from 'styled-components'
+import Filter from '../components/Filter'
+import { isSupabaseConfigured } from '../lib/supabase'
+import { getActivities } from '../lib/supabaseApi'
 
 function Gallery() {
-  const [showFilter, setShowFilter] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState(() => new Set());
+  const [showFilter, setShowFilter] = useState(false)
+  const [selectedFilters, setSelectedFilters] = useState(() => new Set())
+  const [activities, setActivities] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setError('Supabase 환경변수가 설정되지 않았습니다.')
+      setLoading(false)
+      return
+    }
+
+    getActivities()
+      .then(setActivities)
+      .catch((requestError) => {
+        console.error('활동 내용을 불러오지 못했습니다.', requestError)
+        setError('활동 내용을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  const filteredActivities = useMemo(() => {
+    if (selectedFilters.size === 0) {
+      return activities
+    }
+
+    return activities.filter((activity) => {
+      const club = activity.clubs
+      if (!club) {
+        return false
+      }
+
+      const clubTags = [
+        ...(club.category ?? []),
+        ...(club.detail ?? []),
+        ...(club.grade ?? []),
+      ]
+
+      return [...selectedFilters].every((filter) => clubTags.includes(filter))
+    })
+  }, [activities, selectedFilters])
 
   return (
     <Container>
-      {/* 태그 이름을 Header에서 GalleryTitleArea로 바꿔서 헤더와 안 헷갈리게 수정했습니다 */}
       <GalleryTitleArea>
         <TitleBox>
           <Title>갤러리</Title>
@@ -52,31 +58,46 @@ function Gallery() {
           </Description>
         </TitleBox>
 
-        <ButtonGroup>
-          <WriteButton to="/activity/write">활동 내용 작성 +</WriteButton>
-          <FilterButton type="button" onClick={() => setShowFilter(true)}>
-            필터{selectedFilters.size > 0 ? ` (${selectedFilters.size})` : ""} ☰
-          </FilterButton>
-        </ButtonGroup>
+        <FilterButton type="button" onClick={() => setShowFilter(true)}>
+          필터{selectedFilters.size > 0 ? ` (${selectedFilters.size})` : ''} ☰
+        </FilterButton>
       </GalleryTitleArea>
 
-      {/* 더미 데이터를 순회하며 카드 출력 */}
-      {DUMMY_DATA.map((item) => (
-        <Card key={item.id}>
-          <CardInfo>
-            <CardTitle>{item.title}</CardTitle>
-            <CardText>
-              <strong>활동 내용:</strong> {item.content}
-            </CardText>
-          </CardInfo>
+      {loading && <StateMessage>활동 내용을 불러오는 중입니다.</StateMessage>}
+      {!loading && error && <StateMessage $error>{error}</StateMessage>}
+      {!loading && !error && filteredActivities.length === 0 && (
+        <StateMessage>
+          {activities.length === 0
+            ? '등록된 활동 내용이 없습니다.'
+            : '선택한 필터에 맞는 활동 내용이 없습니다.'}
+        </StateMessage>
+      )}
 
-          <ImageContainer>
-            {item.images.map((imgUrl, idx) => (
-              <ImageBox key={idx} src={imgUrl} alt={`활동 사진 ${idx + 1}`} />
-            ))}
-          </ImageContainer>
-        </Card>
-      ))}
+      {!loading &&
+        !error &&
+        filteredActivities.map((activity) => (
+          <Card key={activity.id}>
+            <CardInfo>
+              {(activity.club_name || activity.clubs?.name) && (
+                <ClubName>{activity.club_name || activity.clubs.name}</ClubName>
+              )}
+              <CardTitle>{activity.title}</CardTitle>
+              <CardText>{activity.content}</CardText>
+            </CardInfo>
+
+            {(activity.image_urls ?? []).length > 0 && (
+              <ImageContainer>
+                {activity.image_urls.map((imageUrl, index) => (
+                  <ImageBox
+                    key={imageUrl}
+                    src={imageUrl}
+                    alt={`${activity.club_name || activity.clubs?.name || '동아리'} 활동 사진 ${index + 1}`}
+                  />
+                ))}
+              </ImageContainer>
+            )}
+          </Card>
+        ))}
 
       {showFilter && (
         <Filter
@@ -86,109 +107,115 @@ function Gallery() {
         />
       )}
     </Container>
-  );
+  )
 }
 
-// ----------------- Style Definition -----------------
-
-const Container = styled.div`
-  max-width: 960px;
+const Container = styled.main`
+  width: min(1124px, calc(100% - 40px));
+  min-height: calc(100vh - 105px);
   margin: 0 auto;
-  padding: 32px 20px;
-`;
+  padding: 60px 0 90px;
+`
 
 const GalleryTitleArea = styled.div`
   display: flex;
+  margin-bottom: 60px;
+  align-items: flex-end;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-`;
+  gap: 20px;
+
+  @media (max-width: 680px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`
 
 const TitleBox = styled.div`
   display: flex;
   align-items: baseline;
-  gap: 16px;
-`;
+  gap: 14px;
+
+  @media (max-width: 680px) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+`
 
 const Title = styled.h1`
-  font-size: 32px;
-  font-weight: bold;
   margin: 0;
-`;
+  color: #111;
+  font-size: 42px;
+`
 
 const Description = styled.p`
-  color: #666;
-  font-size: 14px;
   margin: 0;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
-`;
-
-const WriteButton = styled(Link)`
-  background-color: #2b5742;
-  color: white;
-  padding: 10px 18px;
-  border-radius: 20px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-  text-decoration: none;
-`;
+  color: #4f5a55;
+  font-size: 16px;
+`
 
 const FilterButton = styled.button`
-  background-color: #b8d898;
-  color: #2b5742;
   padding: 10px 18px;
+  color: #2b5742;
+  font-weight: 700;
+  background: #b8d898;
+  border: 0;
   border-radius: 20px;
-  border: none;
-  font-weight: bold;
   cursor: pointer;
-`;
+`
 
-const Card = styled.div`
+const StateMessage = styled.p`
+  margin: 90px 0;
+  color: ${({ $error }) => ($error ? '#b42318' : '#5d676b')};
+  font-size: 20px;
+  text-align: center;
+`
+
+const Card = styled.article`
+  display: flex;
+  margin-bottom: 28px;
+  padding: 28px;
   background: #f1f7e9;
   border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-`;
+  flex-direction: column;
+  gap: 24px;
+`
 
 const CardInfo = styled.div`
-  flex: 1;
-`;
+  min-width: 0;
+`
+
+const ClubName = styled.p`
+  margin: 0 0 7px;
+  color: #2b5748;
+  font-size: 15px;
+  font-weight: 700;
+`
 
 const CardTitle = styled.h2`
-  font-size: 18px;
-  font-weight: bold;
-  margin-top: 0;
-  margin-bottom: 16px;
-`;
+  margin: 0 0 14px;
+  color: #1f2c27;
+  font-size: 24px;
+`
 
 const CardText = styled.p`
-  font-size: 14px;
-  color: #333;
-  line-height: 1.6;
   margin: 0;
-`;
+  color: #39443f;
+  line-height: 1.7;
+  white-space: pre-wrap;
+`
 
 const ImageContainer = styled.div`
-  display: flex;
-  gap: 12px;
-  flex-shrink: 0;
-`;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+`
 
 const ImageBox = styled.img`
-  width: 120px;
-  height: 100px;
-  background-color: #d9d9d9;
-  border-radius: 12px;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   object-fit: cover;
-`;
+  border-radius: 12px;
+`
 
-export default Gallery;
+export default Gallery
