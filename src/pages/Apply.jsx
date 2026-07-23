@@ -238,24 +238,73 @@ const clubData = [
   }
 ];
 
+// 동아리 소개글 바탕으로 고유한 FAQ 질문/답변 생성 함수
+const getCustomFAQ = (club) => {
+  if (!club) return [];
+
+  const gradeText = club.target;
+  const teacherText = club.teacher;
+  const isInterview = club.interview === '유';
+
+  // 동아리 특성에 따른 질문 세트 생성
+  const customQuestions = [
+    {
+      q: `Q. [${club.name}]에서는 주로 어떤 주요 활동을 진행하나요?`,
+      a: `A. 저희 동아리는 "${club.desc}"에 초점을 맞추어 정기적인 활동 및 프로젝트를 진행하고 있습니다.`
+    },
+    {
+      q: `Q. 신입 부원 선발 시 면접 절차가 어떻게 되나요?`,
+      a: isInterview 
+        ? `A. 면접이 진행되는 동아리입니다. ${teacherText} 선생님 및 기존 부원들과 함께 지원 동기와 동아리 활동 의지를 중심으로 편안한 분위기에서 이야기를 나누게 됩니다.` 
+        : `A. 별도의 면접 없이 신청 순서 및 서류 지원을 바탕으로 선발합니다.`
+    },
+    {
+      q: `Q. 몇 학년부터 참여가 가능한가요?`,
+      a: `A. 현재 모집 대상은 [${gradeText}]입니다. 관심 있는 학생분들의 많은 지원 바랍니다.`
+    }
+  ];
+
+  // 특수 분야별 세번째 추가 질문
+  if (club.name.includes('코딩') || club.name.includes('로그인')) {
+    customQuestions.push({
+      q: `Q. 코딩이나 컴퓨터를 잘 못해도 지원할 수 있나요?`,
+      a: `A. 네! 기초부터 배우면서 함께 실습 프로젝트를 진행하기 때문에 열정만 있다면 초보자도 환영합니다.`
+    });
+  } else if (club.name.includes('배드민턴') || club.name.includes('라이온즈') || club.name.includes('탭')) {
+    customQuestions.push({
+      q: `Q. 개인 준비물이나 실기 테스트가 따로 필요한가요?`,
+      a: `A. 동아리 활동 시 필요한 기본 장비나 개인 연습복 정도만 준비해주시면 되며, 즐겁게 참여하는 마음가짐이 가장 중요합니다!`
+    });
+  } else if (club.name.includes('국제교류')) {
+    customQuestions.push({
+      q: `Q. 외국어를 매우 잘해야 참여할 수 있나요?`,
+      a: `A. 언어 능력보다는 문화적 소통 능력과 열정이 우선입니다. 외국 학교 학생들과 소통하며 함께 언어 실력도 키울 수 있습니다.`
+    });
+  }
+
+  return customQuestions;
+};
+
 export default function ClubList() {
   const [selectedClub, setSelectedClub] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState('전체');
 
+  // [수정 포인트 1] 필터링 조건 완전 수정 (1학년, 2학년, 3학년 모두 정확히 검출)
   const filteredAndSortedClubs = useMemo(() => {
     return clubData
       .filter((club) => {
         if (selectedGrade === '전체') return true;
-        return club.target.includes(selectedGrade);
+        // '1학년' -> '1', '2학년' -> '2' 숫자만 추출하여 대상 타겟 문자열 포함 여부 체크
+        const gradeNum = selectedGrade.replace('학년', '').trim();
+        return club.target.includes(gradeNum);
       })
       .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
   }, [selectedGrade]);
 
   return (
     <div style={styles.container}>
-      {/* 반응형 CSS 미디어 쿼리 정의 */}
       <style>{`
         @media (max-width: 768px) {
           .top-header {
@@ -291,9 +340,7 @@ export default function ClubList() {
         }
       `}</style>
 
-      {/* 데스크톱/태블릿/모바일 가변형 레이아웃 래퍼 */}
       <div style={styles.contentWrapper}>
-        
         {/* 상단 헤더 영역 */}
         <div className="top-header" style={styles.topHeader}>
           <div className="title-area" style={styles.titleArea}>
@@ -341,12 +388,13 @@ export default function ClubList() {
           </div>
         </div>
 
-        {/* 메인 동아리 카드 목록 */}
+        {/* 동아리 카드 목록 영역 */}
         <main style={styles.mainContent}>
           {filteredAndSortedClubs.map((club) => (
             <div key={club.id} style={styles.card}>
               <h2 style={styles.cardTitle}>{club.name}</h2>
               
+              {/* [수정 포인트 2] cardBody에 align-items: center를 주어 버튼 포함 전 요소가 정중앙에 수평 배열되도록 처리 */}
               <div className="card-body" style={styles.cardBody}>
                 <div className="image-box" style={styles.imageBox}>
                   <img 
@@ -367,6 +415,7 @@ export default function ClubList() {
                   </div>
                 </div>
 
+                {/* 정중앙에 정렬되는 자주 묻는 질문 버튼 */}
                 <button 
                   className="faq-button"
                   style={styles.faqButton} 
@@ -380,17 +429,18 @@ export default function ClubList() {
         </main>
       </div>
 
-      {/* 자주 묻는 질문 모달 */}
+      {/* [수정 포인트 3] 동아리별 고유 FAQ가 출력되는 모달 창 */}
       {selectedClub && (
         <div style={styles.modalOverlay} onClick={() => setSelectedClub(null)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <h3 style={styles.modalTitle}>[{selectedClub.name}] 자주 묻는 질문</h3>
             <div style={styles.modalBody}>
-              <p><strong>Q. 면접은 어떤 방식으로 진행되나요?</strong></p>
-              <p>A. 담당 선생님({selectedClub.teacher} 선생님)과 동아리 부원들이 간단한 개별 면접을 진행합니다.</p>
-              <br />
-              <p><strong>Q. 모집 대상 학년이 어떻게 되나요?</strong></p>
-              <p>A. 본 동아리는 {selectedClub.target} 학생들을 대상으로 모집하고 있습니다.</p>
+              {getCustomFAQ(selectedClub).map((faq, index) => (
+                <div key={index} style={{ marginBottom: '16px' }}>
+                  <p style={{ fontWeight: 'bold', color: '#111', margin: '0 0 4px 0' }}>{faq.q}</p>
+                  <p style={{ margin: 0, color: '#444' }}>{faq.a}</p>
+                </div>
+              ))}
             </div>
             <button style={styles.closeButton} onClick={() => setSelectedClub(null)}>
               닫기
@@ -427,7 +477,7 @@ export default function ClubList() {
   );
 }
 
-// 스타일
+// 스타일 정의
 const styles = {
   container: {
     width: '100%',
@@ -443,7 +493,7 @@ const styles = {
     maxWidth: '1200px',
     display: 'flex',
     flexDirection: 'column',
-    padding: '0 clamp(16px, 4vw, 32px)', // 화면 크기에 따라 패딩 자동 조절
+    padding: '0 clamp(16px, 4vw, 32px)',
     boxSizing: 'border-box',
   },
   topHeader: {
@@ -460,7 +510,7 @@ const styles = {
     flexWrap: 'wrap',
   },
   pageTitle: {
-    fontSize: 'clamp(24px, 4vw, 36px)', // 화면 크기에 따라 폰트 크기 유동 반응
+    fontSize: 'clamp(24px, 4vw, 36px)',
     fontWeight: 'bold',
     margin: 0,
     color: '#000000',
@@ -542,7 +592,7 @@ const styles = {
   },
   cardBody: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'center', // 세로 정중앙 배치 핵심 설정
     gap: '20px',
   },
   imageBox: {
@@ -589,6 +639,7 @@ const styles = {
     cursor: 'pointer',
     flexShrink: 0,
     whiteSpace: 'nowrap',
+    alignSelf: 'center', // 카드 바디 내에서 완벽한 정중앙 배치
   },
   modalOverlay: {
     position: 'fixed',
@@ -606,8 +657,8 @@ const styles = {
   modalContent: {
     backgroundColor: '#ffffff',
     borderRadius: '14px',
-    padding: '24px',
-    width: '450px',
+    padding: '28px',
+    width: '500px',
     maxWidth: '100%',
     boxShadow: '0 6px 24px rgba(0,0,0,0.15)',
     boxSizing: 'border-box',
@@ -616,12 +667,16 @@ const styles = {
     marginTop: 0,
     color: '#2D5A4D',
     fontSize: '18px',
+    borderBottom: '2px solid #EEF5DB',
+    paddingBottom: '12px',
   },
   modalBody: {
-    margin: '16px 0',
+    margin: '20px 0',
     lineHeight: '1.5',
     color: '#333',
     fontSize: '14px',
+    maxHeight: '60vh',
+    overflowY: 'auto',
   },
   formGroup: {
     marginBottom: '14px',
@@ -650,5 +705,6 @@ const styles = {
     borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
+    float: 'right',
   },
 };
