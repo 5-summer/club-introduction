@@ -1,6 +1,8 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/Header.jsx'
+import ActivityWrite from './pages/ActivityWrite.jsx'
 import Apply from './pages/Apply.jsx'
+import ClubRegister from './pages/ClubRegister.jsx'
 import Gallery from './pages/Gallery.jsx'
 import Home from './pages/Home.jsx'
 import Introduce from './pages/Introduce.jsx'
@@ -18,6 +20,8 @@ function App() {
         <Route path="/introduce" element={<Introduce />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/apply" element={<Apply />} />
+        <Route path="/register" element={<ClubRegister />} />
+        <Route path="/activity/write" element={<ActivityWrite />} />
       </Routes>
     </BrowserRouter>
   )
