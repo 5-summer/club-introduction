@@ -13,11 +13,15 @@ create table if not exists public.clubs (
   grade text[] not null default '{}',
   interview boolean not null default false,
   recruitment_count integer not null default 0 check (recruitment_count >= 0),
+  type text,
   image_url text
 );
 
 alter table public.clubs
 add column if not exists recruitment_count integer not null default 0;
+
+alter table public.clubs
+add column if not exists type text;
 
 create table if not exists public.activities (
   id bigint generated always as identity primary key,
