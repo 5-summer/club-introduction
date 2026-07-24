@@ -44,6 +44,7 @@ function Introduce() {
       ...(club.category ?? []),
       ...(club.detail ?? []),
       ...(club.grade ?? []),
+      ...(club.type ?? []),
       club.interview ? '면접' : '비면접',
     ]
   }, [club])

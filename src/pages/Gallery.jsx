@@ -42,6 +42,7 @@ function Gallery() {
         ...(club.category ?? []),
         ...(club.detail ?? []),
         ...(club.grade ?? []),
+        ...(club.type ?? []),
       ]
 
       return [...selectedFilters].every((filter) => clubTags.includes(filter))

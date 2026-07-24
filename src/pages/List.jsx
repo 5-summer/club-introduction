@@ -6,9 +6,13 @@ import { isSupabaseConfigured } from '../lib/supabase'
 import { getClubs } from '../lib/supabaseApi'
 
 const FILTER_GROUPS = [
-  { title: '카테고리', options: ['이과', '문과'] },
-  { title: '세부 카테고리', options: ['수학', '과학', '보건', '생명', 'IT'] },
+  { title: '카테고리', options: ['이과', '문과', '예체능'] },
+  { 
+    title: '세부 카테고리', 
+    options: ['국어', '언어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '음악', '미술', '체육', '간호'] 
+  },
   { title: '학년', options: ['1학년', '2학년'] },
+  { title: '상설/창체', options: ['상설', '창체'] },
 ]
 
 function includesSelectedOption(club, title, selectedOptions) {
@@ -21,15 +25,19 @@ function includesSelectedOption(club, title, selectedOptions) {
   }
 
   if (title === '카테고리') {
-    return selectedInGroup.some((option) => club.category.includes(option))
+    return selectedInGroup.some((option) => club.category?.includes(option))
   }
 
   if (title === '세부 카테고리') {
-    return selectedInGroup.some((option) => club.detail.includes(option))
+    return selectedInGroup.some((option) => club.detail?.includes(option))
+  }
+
+  if (title === '상설/창체') {
+    return selectedInGroup.some((option) => club.type?.includes(option))
   }
 
   return selectedInGroup.some((option) =>
-    club.grade.some((grade) => grade.includes(option.replace('학년', ''))),
+    club.grade?.some((grade) => grade.includes(option.replace('학년', ''))),
   )
 }
 
@@ -65,6 +73,8 @@ function List() {
       const category = club.category ?? []
       const detail = club.detail ?? []
       const grade = club.grade ?? []
+      const type = club.type ?? []
+      
       const searchableText = [
         club.name,
         club.teacher,
@@ -72,6 +82,7 @@ function List() {
         ...category,
         ...detail,
         ...grade,
+        type,
         club.interview ? '면접' : '비면접',
       ]
         .filter(Boolean)
@@ -79,7 +90,7 @@ function List() {
         .replaceAll(' ', '')
         .toLowerCase()
 
-      const normalizedClub = { ...club, category, detail, grade }
+      const normalizedClub = { ...club, category, detail, grade, type }
       const matchesFilters = FILTER_GROUPS.every(({ title }) =>
         includesSelectedOption(normalizedClub, title, selectedOptions),
       )
@@ -134,11 +145,14 @@ function List() {
                 <h3>{club.name}</h3>
                 <p>{club.description || '등록된 소개가 없습니다.'}</p>
                 <TagArea>
-                  {[...(club.category ?? []), ...(club.detail ?? []), ...(club.grade ?? [])].map(
-                    (tag) => (
-                      <Tag key={tag}>{tag}</Tag>
-                    ),
-                  )}
+                  {[
+                    ...(club.category ?? []),
+                    ...(club.detail ?? []),
+                    ...(club.grade ?? []),
+                    ...(club.type ?? [])
+                  ].map((tag) => (
+                    <Tag key={tag}>{tag}</Tag>
+                  ))}
                   <Tag>{club.interview ? '면접' : '비면접'}</Tag>
                 </TagArea>
               </InfoBox>
