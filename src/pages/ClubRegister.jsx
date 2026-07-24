@@ -273,6 +273,8 @@ const StatusMessage = styled.p`
 
 const featureTagOptions = [
   '면접',
+  '상설',
+  '창체',
   '이과',
   '문과',
   '예체능',
