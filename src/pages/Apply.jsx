@@ -128,7 +128,7 @@ function Apply() {
                       <strong>담당 교사:</strong> {club.teacher || '미등록'}
                     </span>
                      <span>
-                      <strong>상설/창체:</strong> {club.type || '상설 : 창체'}
+                      <strong>상설/창체:</strong> {club.type ? '상설' : '창체'}
                     </span>
                   </Meta>
                 </InfoBox>
