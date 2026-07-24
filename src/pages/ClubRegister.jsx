@@ -277,7 +277,6 @@ const featureTagOptions = [
   '문과',
   '예체능',
   '국어',
-  '언어',
   '수학',
   '사회',
   '경제',
@@ -291,13 +290,13 @@ const featureTagOptions = [
   'IT',
   '심리',
   '교육',
-  '음악',
-  '미술',
-  '체육',
-  '간호'
+  '간호',
+  '봉사'
 ]
 
 const gradeOptions = ['1학년', '2학년']
+
+const clubType = ['상설', '창체']
 
 function ClubRegister() {
   const navigate = useNavigate()
@@ -431,6 +430,7 @@ function ClubRegister() {
         detail: tags.filter((tag) =>
           ['국어', '언어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '음악', '미술', '체육', '간호'].includes(tag),
         ),
+        type: tags.filter((tag) => ['상설', '창체'].includes(tag)),
         grade: tags.filter((tag) => gradeOptions.includes(tag)),
         interview: tags.includes('면접'),
         recruitment_count: recruitmentCount,

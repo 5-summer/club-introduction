@@ -7,10 +7,7 @@ import { getClubs } from '../lib/supabaseApi'
 
 const FILTER_GROUPS = [
   { title: '카테고리', options: ['이과', '문과', '예체능'] },
-  { 
-    title: '세부 카테고리', 
-    options: ['국어', '언어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '음악', '미술', '체육', '간호'] 
-  },
+  { title: '세부 카테고리', options: ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'] },
   { title: '학년', options: ['1학년', '2학년'] },
   { title: '상설/창체', options: ['상설', '창체'] },
 ]
@@ -82,7 +79,7 @@ function List() {
         ...category,
         ...detail,
         ...grade,
-        type,
+        ...type,
         club.interview ? '면접' : '비면접',
       ]
         .filter(Boolean)

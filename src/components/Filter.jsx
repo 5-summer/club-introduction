@@ -4,8 +4,9 @@ import styled from 'styled-components'
 
 const FILTER_GROUPS = [
   { title: '카테고리', options: ['이과', '문과', '예체능'] },
-  { title: '세부 카테고리', options: ['국어', '언어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '음악', '미술', '체육', '간호'] },
+  { title: '세부 카테고리', options: ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'] },
   { title: '학년', options: ['1학년', '2학년'] },
+  { title: '상설/창체', options: ['상설', '창체']},
 ]
 
 const Backdrop = styled.div`
@@ -21,8 +22,11 @@ const Backdrop = styled.div`
 const Modal = styled.div`
   width: min(853px, 100%);
   min-height: 674px;
+  max-height: 90vh; /* 화면 높이의 90%까지만 커지도록 제한 */
+  display: flex;
+  flex-direction: column; /* 내부 요소를 세로로 배치 */
   padding: 36px 24px 48px;
-  overflow: hidden;
+  overflow: hidden; /* 모달 전체가 스크롤되는 것을 방지 */
   background: #ffffff;
   border-radius: 30px;
   box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.1);
@@ -39,6 +43,7 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   padding: 0 24px 23px;
   border-bottom: 1px solid #d9d9d9;
+  flex-shrink: 0; /* 스크롤 시 영역이 찌그러지지 않도록 고정 */
 `
 
 const Title = styled.h2`
@@ -62,6 +67,8 @@ const ResetRow = styled.div`
   display: flex;
   justify-content: flex-end;
   padding: 17px 5px 0;
+  margin-bottom: 20px; /* 아래 스크롤 영역과의 간격 추가 */
+  flex-shrink: 0; /* 스크롤 시 영역이 찌그러지지 않도록 고정 */
 `
 
 const ResetButton = styled.button`
@@ -79,8 +86,22 @@ const ResetButton = styled.button`
 const FilterContent = styled.div`
   display: flex;
   flex-direction: column;
+  flex: 1; /* 남은 공간을 모두 차지하도록 설정 */
+  overflow-y: auto; /* 내용이 넘치면 세로 스크롤 생성 */
   gap: 33px;
-  padding: 0 24px;
+  padding: 0 24px 20px;
+  
+  /* 스크롤바 디자인 (선택사항, 깔끔하게 보이도록 추가) */
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #b0d8b3;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 `
 
 const FilterGroup = styled.section`
