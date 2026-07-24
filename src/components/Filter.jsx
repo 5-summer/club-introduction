@@ -3,10 +3,17 @@ import { GrPowerReset } from 'react-icons/gr'
 import styled from 'styled-components'
 
 const FILTER_GROUPS = [
-  { title: '카테고리', options: ['이과', '문과', '예체능'] },
-  { title: '세부 카테고리', options: ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'] },
-  { title: '학년', options: ['1학년', '2학년'] },
-  { title: '상설/창체', options: ['상설', '창체']},
+  { title: '면접 유무', options: ['면접'] },
+  { title: '동아리 유형', options: ['상설', '창체'] },
+  {
+    title: '동아리 특성',
+    options: [
+      '이과', '문과', '예체능',
+      '국어', '수학', '사회', '경제', '정치', '역사', '과학',
+      '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사',
+    ],
+  },
+  { title: '모집 학년', options: ['1학년', '2학년'] },
 ]
 
 const Backdrop = styled.div`
@@ -91,7 +98,7 @@ const FilterContent = styled.div`
   gap: 33px;
   padding: 0 24px 20px;
   
-  /* 스크롤바 디자인 (선택사항, 깔끔하게 보이도록 추가) */
+  /* 스크롤바 디자인 */
   &::-webkit-scrollbar {
     width: 8px;
   }

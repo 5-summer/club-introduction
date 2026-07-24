@@ -271,34 +271,14 @@ const StatusMessage = styled.p`
   font-size: 18px;
 `
 
-const featureTagOptions = [
-  '면접',
-  '상설',
-  '창체',
-  '이과',
-  '문과',
-  '예체능',
-  '국어',
-  '수학',
-  '사회',
-  '경제',
-  '정치',
-  '역사',
-  '과학',
-  '물리',
-  '화학',
-  '생명',
-  '지구',
-  'IT',
-  '심리',
-  '교육',
-  '간호',
-  '봉사'
+const interviewOptions = ['면접']
+const typeOptions = ['상설', '창체']
+const featureOptions = [
+  '이과', '문과', '예체능',
+  '국어', '수학', '사회', '경제', '정치', '역사', '과학',
+  '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'
 ]
-
 const gradeOptions = ['1학년', '2학년']
-
-const clubType = ['상설', '창체']
 
 function ClubRegister() {
   const navigate = useNavigate()
@@ -343,6 +323,7 @@ function ClubRegister() {
             ...(club.category ?? []),
             ...(club.detail ?? []),
             ...(club.grade ?? []),
+            ...(club.type ? [club.type] : []),
             ...(club.interview ? ['면접'] : []),
           ]),
         )
@@ -383,6 +364,7 @@ function ClubRegister() {
     setForm((currentForm) => ({ ...currentForm, [name]: value }))
   }
 
+  // 일반 다중 선택 태그 (특성, 학년, 면접)
   const handleTag = (tag) => {
     setSelectedTags((currentTags) => {
       const nextTags = new Set(currentTags)
@@ -391,6 +373,24 @@ function ClubRegister() {
         nextTags.delete(tag)
       } else {
         nextTags.add(tag)
+      }
+
+      return nextTags
+    })
+  }
+
+  // 단일 선택 태그 (상설/창체 유형 전용)
+  const handleTypeTag = (selectedType) => {
+    setSelectedTags((currentTags) => {
+      const nextTags = new Set(currentTags)
+      const isAlreadySelected = nextTags.has(selectedType)
+
+      // 기존 선택된 유형(상설/창체)을 모두 지움
+      typeOptions.forEach((type) => nextTags.delete(type))
+
+      // 방금 누른 게 선택되어 있지 않았다면 추가 (토글 기능)
+      if (!isAlreadySelected) {
+        nextTags.add(selectedType)
       }
 
       return nextTags
@@ -430,9 +430,9 @@ function ClubRegister() {
         faq: form.faq.trim(),
         category: tags.filter((tag) => ['이과', '문과', '예체능'].includes(tag)),
         detail: tags.filter((tag) =>
-          ['국어', '언어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '음악', '미술', '체육', '간호'].includes(tag),
+          ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'].includes(tag),
         ),
-        type: tags.filter((tag) => ['상설', '창체'].includes(tag)),
+        type: tags.find((tag) => ['상설', '창체'].includes(tag)) || null,
         grade: tags.filter((tag) => gradeOptions.includes(tag)),
         interview: tags.includes('면접'),
         recruitment_count: recruitmentCount,
@@ -547,10 +547,11 @@ function ClubRegister() {
           />
         </Field>
 
+        {/* 1. 면접 유무 선택 */}
         <TagsField>
-          <legend>동아리의 특징 작성하기</legend>
+          <legend>면접 유무</legend>
           <Tags>
-            {featureTagOptions.map((tag) => (
+            {interviewOptions.map((tag) => (
               <Tag key={tag}>
                 <input
                   type="checkbox"
@@ -565,6 +566,45 @@ function ClubRegister() {
           </Tags>
         </TagsField>
 
+        {/* 2. 동아리 유형 선택 (handleTypeTag 연결) */}
+        <TagsField>
+          <legend>동아리 유형 선택하기</legend>
+          <Tags>
+            {typeOptions.map((tag) => (
+              <Tag key={tag}>
+                <input
+                  type="checkbox"
+                  name="tags"
+                  value={tag}
+                  checked={selectedTags.has(tag)}
+                  onChange={() => handleTypeTag(tag)} 
+                />
+                <span># {tag}</span>
+              </Tag>
+            ))}
+          </Tags>
+        </TagsField>
+
+        {/* 3. 동아리 특성 선택 */}
+        <TagsField>
+          <legend>동아리 특성 선택하기</legend>
+          <Tags>
+            {featureOptions.map((tag) => (
+              <Tag key={tag}>
+                <input
+                  type="checkbox"
+                  name="tags"
+                  value={tag}
+                  checked={selectedTags.has(tag)}
+                  onChange={() => handleTag(tag)}
+                />
+                <span># {tag}</span>
+              </Tag>
+            ))}
+          </Tags>
+        </TagsField>
+
+        {/* 4. 모집 학년 선택 */}
         <TagsField>
           <legend>모집 학년 선택하기</legend>
           <Tags>

@@ -6,36 +6,51 @@ import { isSupabaseConfigured } from '../lib/supabase'
 import { getClubs } from '../lib/supabaseApi'
 
 const FILTER_GROUPS = [
-  { title: '카테고리', options: ['이과', '문과', '예체능'] },
-  { title: '세부 카테고리', options: ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'] },
-  { title: '학년', options: ['1학년', '2학년'] },
-  { title: '상설/창체', options: ['상설', '창체'] },
+  { title: '면접 유무', options: ['면접'] },
+  { title: '동아리 유형', options: ['상설', '창체'] },
+  {
+    title: '동아리 특성',
+    options: [
+      '이과', '문과', '예체능',
+      '국어', '수학', '사회', '경제', '정치', '역사', '과학',
+      '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사',
+    ],
+  },
+  { title: '모집 학년', options: ['1학년', '2학년'] },
 ]
 
 function includesSelectedOption(club, title, selectedOptions) {
+  const groupObj = FILTER_GROUPS.find((group) => group.title === title)
+  if (!groupObj) return true
+
   const selectedInGroup = selectedOptions.filter((option) =>
-    FILTER_GROUPS.find((group) => group.title === title)?.options.includes(option),
+    groupObj.options.includes(option),
   )
 
   if (selectedInGroup.length === 0) {
     return true
   }
 
-  if (title === '카테고리') {
-    return selectedInGroup.some((option) => club.category?.includes(option))
+  if (title === '면접 유무') {
+    return selectedInGroup.includes('면접') ? Boolean(club.interview) : true
   }
 
-  if (title === '세부 카테고리') {
-    return selectedInGroup.some((option) => club.detail?.includes(option))
+  if (title === '동아리 유형') {
+    return selectedInGroup.includes(club.type)
   }
 
-  if (title === '상설/창체') {
-    return selectedInGroup.some((option) => club.type?.includes(option))
+  if (title === '동아리 특성') {
+    const features = [...(club.category ?? []), ...(club.detail ?? [])]
+    return selectedInGroup.some((option) => features.includes(option))
   }
 
-  return selectedInGroup.some((option) =>
-    club.grade?.some((grade) => grade.includes(option.replace('학년', ''))),
-  )
+  if (title === '모집 학년') {
+    return selectedInGroup.some((option) =>
+      (club.grade ?? []).some((grade) => grade.includes(option.replace('학년', ''))),
+    )
+  }
+
+  return true
 }
 
 function List() {
@@ -70,7 +85,7 @@ function List() {
       const category = club.category ?? []
       const detail = club.detail ?? []
       const grade = club.grade ?? []
-      const type = club.type ?? []
+      const typeStr = club.type ?? ''
       
       const searchableText = [
         club.name,
@@ -79,7 +94,7 @@ function List() {
         ...category,
         ...detail,
         ...grade,
-        ...type,
+        typeStr,
         club.interview ? '면접' : '비면접',
       ]
         .filter(Boolean)
@@ -87,9 +102,8 @@ function List() {
         .replaceAll(' ', '')
         .toLowerCase()
 
-      const normalizedClub = { ...club, category, detail, grade, type }
       const matchesFilters = FILTER_GROUPS.every(({ title }) =>
-        includesSelectedOption(normalizedClub, title, selectedOptions),
+        includesSelectedOption(club, title, selectedOptions),
       )
 
       return searchableText.includes(keyword) && matchesFilters
@@ -141,15 +155,25 @@ function List() {
               <InfoBox>
                 <h3>{club.name}</h3>
                 <p>{club.description || '등록된 소개가 없습니다.'}</p>
+                
                 <TagArea>
-                  {[
-                    ...(club.category ?? []),
-                    ...(club.detail ?? []),
-                    ...(club.grade ?? []),
-                    ...(club.type ?? [])
-                  ].map((tag) => (
+                  {/* 1. 동아리 유형 */}
+                  {club.type && <Tag>{club.type}</Tag>}
+
+                  {/* 2. 동아리 특성 */}
+                  {(club.category ?? []).map((tag) => (
                     <Tag key={tag}>{tag}</Tag>
                   ))}
+                  {(club.detail ?? []).map((tag) => (
+                    <Tag key={tag}>{tag}</Tag>
+                  ))}
+
+                  {/* 3. 모집 학년 */}
+                  {(club.grade ?? []).map((tag) => (
+                    <Tag key={tag}>{tag}</Tag>
+                  ))}
+
+                  {/* 4. 면접 유무 */}
                   <Tag>{club.interview ? '면접' : '비면접'}</Tag>
                 </TagArea>
               </InfoBox>

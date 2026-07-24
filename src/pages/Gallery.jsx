@@ -39,10 +39,11 @@ function Gallery() {
       }
 
       const clubTags = [
+        ...(club.type ? [club.type] : []),
         ...(club.category ?? []),
         ...(club.detail ?? []),
         ...(club.grade ?? []),
-        ...(club.type ?? []),
+        ...(club.interview ? ['면접'] : []),
       ]
 
       return [...selectedFilters].every((filter) => clubTags.includes(filter))
