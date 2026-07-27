@@ -275,8 +275,8 @@ const interviewOptions = ['면접']
 const typeOptions = ['상설', '창체']
 const featureOptions = [
   '이과', '문과', '예체능',
-  '국어', '수학', '사회', '경제', '정치', '역사', '과학',
-  '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'
+  '국어', '독서', '수학', '사회', '경제', '정치', '지리', '역사', '과학',
+  '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '봉사', '진로', '미술', '체육'
 ]
 const gradeOptions = ['1학년', '2학년']
 
@@ -430,7 +430,7 @@ function ClubRegister() {
         faq: form.faq.trim(),
         category: tags.filter((tag) => ['이과', '문과', '예체능'].includes(tag)),
         detail: tags.filter((tag) =>
-          ['국어', '수학', '사회', '경제', '정치', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '간호', '봉사'].includes(tag),
+          ['국어', '독서', '수학', '사회', '경제', '정치', '지리', '역사', '과학', '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '봉사', '진로', '미술', '체육'].includes(tag),
         ),
         type: tags.find((tag) => ['상설', '창체'].includes(tag)) || null,
         grade: tags.filter((tag) => gradeOptions.includes(tag)),
