@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { getClubs } from '../lib/supabaseApi'
 
-const GRADE_OPTIONS = ['전체', '1학년', '2학년']
+const GRADE_OPTIONS = ['전체', '1학년', '2학년', '3학년']
 
 function Apply() {
   const [selectedClub, setSelectedClub] = useState(null)

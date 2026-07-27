@@ -278,7 +278,7 @@ const featureOptions = [
   '국어', '독서', '수학', '사회', '경제', '정치', '지리', '역사', '과학',
   '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '봉사', '진로', '미술', '체육'
 ]
-const gradeOptions = ['1학년', '2학년']
+const gradeOptions = ['1학년', '2학년', '3학년']
 
 function ClubRegister() {
   const navigate = useNavigate()

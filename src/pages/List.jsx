@@ -16,7 +16,7 @@ const FILTER_GROUPS = [
       '물리', '화학', '생명', '지구', 'IT', '심리', '교육', '봉사', '진로', '미술', '체육'
     ],
   },
-  { title: '모집 학년', options: ['1학년', '2학년'] },
+  { title: '모집 학년', options: ['1학년', '2학년', '3학년'] },
 ]
 
 function includesSelectedOption(club, title, selectedOptions) {
